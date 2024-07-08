@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>.ws {white-space: pre;}</style>
+</head>
+
+<body>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+    </style>
+    <header>
+        <h1>Data Collection</h1>
+    </header>
+
+    <main>
+        <h3>I. File & Data Flow</h3>
+        <ol>
+            <h4><li class="ws">[dataCollection.py]  ->  [src/sensor_util.py]</li></h4>
+            <table style="width:70%; ">
+                <tr>
+                    <td style="text-align:left;">a. rgbs</td>
+                    <td style="text-align:left;">|.jpg</td>
+                    <td style="text-align:left;">3 ch imgs all cam unit8</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">b. depths</td>
+                    <td style="text-align:left;">|.tiff</td>
+                    <td style="text-align:left;">1 ch imgs np.float32</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">c. semantics</td>
+                    <td style="text-align:left;">|.png</td>
+                    <td style="text-align:left;">1 ch imgs uint8</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">d. configs</td>
+                    <td style="text-align:left;">|.json</td>
+                    <td style="text-align:left;">Contain the configs of cameras at each timeframe</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">e.road_boundaries</td>
+                    <td style="text-align:left;">|.npy</td>
+                    <td style="text-align:left;">Numpy Road Boundaries XYZ Relative to Vehicle 0.1 meters apart</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">f. bbox</td>
+                    <td style="text-align:left;">|.pkl</td>
+                    <td style="text-align:left;">Pickled bbox class BBoxVars in src/carla_specific/bbox_util.py</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;"></td>
+                    <td style="text-align:left;"></td>
+                    <td style="text-align:left;">Contains bboxes [XYZ, Cls, yaws, extends] in [Carla-Hand Rule aka LEFT] and all [Camera/Drone/Vehicle] Extrinsics in both Carla-Left and Right Hand</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left;">g. measurements</td>
+                    <td style="text-align:left;">|.json</td>
+                    <td style="text-align:left;">Steer/Throttle/brake/speed/theta/junction/collision/Pose_global/ego_matrix in Carla-Hand Rule Left</td>
+            </table>
+            <h4><li>preprocess.py</li></h4>
+                <ol type="a">
+                    <li class="ws">Delete all PostProcessed Files</li>
+                    <li class="ws">Waypoint Interpolation and Select 20% of Desired files</li>
+                    <li class="ws">Process desired Files located above in func self.processAllv2()</li>
+                    <li class="ws">Save all in [Right-Hand] [Bev-RGB, Bev-Sem, BBoxes, GroundPCD, Non-GroundPCD, Center, Sides] in post-process dir</li>
+                    <li class="ws">Transfer Desired original RGB,Sem to Post Processed</li>
+                </ol>
+        </ol>
+
+        <h3>II. data</h3>
+        <ol>
+            <h4>II.1. BBox in File Preprocess.py at func processAllv2</h4>
+            <ol type="a">
+                <li>Class [BBoxUtil] Func [getBBoxesUnoccludedFromAllCam] using Params(Depths_1d, forward, ExtrinsicCamera Matrix using <b>Carla's Hand rule Convention</b>) This is a mistake but done for quicker deployment</li>
+                <li>Class [BBoxUtil] Func [getBevBBoxes2DFrom3Dbboxes] Performs the Conversion from <b>Carla-Hand to Right-Hand</b> as well as obtaining rotated BBoxes</li>
+                <li>The 3D bbox is then sent to <b>rasterize3Dbboxto2D</b> for 3D to 2D using <b>rasterization</b> and <b>then rotated via 2D</b></li>
+            </ol>
+            <h4>II.2.  PointClouds RGB, Class from Depths_1d imgs</h4>
+            <ol type="a">
+                <li>func <b>process_depthNRGBC</b>: Combines Depth, Sem and RGB</li>
+                <ol type="i">
+                    <li>1D depth images to xyz <b>world Right-Hand</b> 3D [width,height,channels_3] using Right-Hand</li>
+                    <li>Combine 3D PCD with Sem and RGB via Stacking Since they are all the [width, height] </li>
+                </ol>
+                <li>Convert np to Torch Tensor in GPU. Bus Speed is 0.25 seconds aka 4 fps/s</li>
+                <li>func <b>world2Drone2VehicleV2</b>: Convert PCD world to Vehicle Space </li>
+                <ol type="i">
+                    <li>Transforms the 3D PCD to Drone and Vehicle using the <b>Extrinsic Right-Hand Matrices</b> </li>
+                    <li>Limit the PointClouds according to configs</li>
+                </ol>
+                <li>Rasterize the pointcloud in GPU using func <b>pcd2img_torch_v2</b></li>
+                <li>PCDRGBC Vehicle from GPU to CPU</li>
+                <li>Split the pointcloud to Non-Ground and Ground and save to post-process</li>
+            </ol>
+        </ol>
+        <h3>III. Conversion from Carla-Hand to Right-Hand</h3>
+        <ol>
+            <li><b>X,Y,Z -> X,-Y,Z</b></li>
+            <li><b>roll, pitch, yaw -> roll, -pitch, -yaw</b></li>
+            <li>Transform Matrix is located in <b>transform.py</b> in func <b>carlatf2TransformMatrix</b></li>
+        </ol>
+    </main>
+
+    <footer>
+        <p>&copy; 2022 My Web Page. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

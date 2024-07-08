@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>.ws {white-space: pre;}</style>
+</head>
+
+<body>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+    </style>
+    <header>
+        <h1>NLP aka NSP Next Sentence Prediction</h1>
+        Reference links 
+        <ol style="list-style: none;" class="ws">
+            <li>https://github.com/jamescalam/transformers/tree/main         [06_nsp_training.ipynb]</li>
+            <li>https://gmongaras.medium.com/how-do-self-attention-masks-work-72ed9382510f</li>
+        </ol>
+    </header>
+    <main>
+        <h3>I. Transformer Inputs</h3>
+        <ol style="list-style: none;">
+            <li>Combined : "[cls], [tokens], [Mask] ... [PAD]".........<b>[FixedLength of 512]</b></li>
+            <li>1. Attention Mask array Shape = [Batch_size, Length of 512] e.g. [1, 0, 0] then [1, 1, 0]</li>
+            <li>2. Token type ID = [Batch_size, Length of 512] : e.g. [1, 1, 0 ]</li>
+            <li>3. Input Id's = [Batch_size, Length of 512] : e.g. [10, 2412, 0]</li>
+            <li>4. Label of Pad = [Batch_size, Length of 1] : e.g. [0] </li>
+        </ol>
+        <table style="width:100%; border-collapse: collapse;">
+            <tr>
+            <td style="text-align:left; border: 1px solid white;">a. cls</td>
+            <td style="text-align:left; border: 1px solid white;">
+            <ol style="list-style: none;">
+            <li>Function 1: Just tells what type it is, e.g. Classification, Summarization, Translation</li>
+            </ol></td>
+            </tr>
+            <tr>
+            <td style="text-align:left; border: 1px solid white;">b. tokens</td>
+            <td style="text-align:left; border: 1px solid white;">
+            <ol style="list-style: none;">
+            <li>Function 1: Integer of the word e.g. "Hi" = 1</li>
+            </ol></td>
+            </tr>
+            <tr>
+            <td style="text-align:left; border: 1px solid white;">c. Pad</td>
+            <td style="text-align:left; border: 1px solid white;">
+            <ol style="list-style: none;">
+            <li>Function 1: To ensure the sentences have the same Length to satisfy 512 Length</li>
+            </ol></td>
+            </tr>
+            <tr>
+            <td style="text-align:left; border: 1px solid white;">d. Mask</td>
+            <td style="text-align:left; border: 1px solid white;">
+            
+            <ol style="list-style: none;">
+            <li>There are 3 types of mask: The mask is an array of <b>Fixed Length of 512</b> sent to the network</li>
+            <li>Type 1: random masking at tokens with words acts as a dropout.</li>
+            <li>Type 2: Definite masking at all Paddings, to prevent the AI from modeling the [PAD] tokens</li>
+            <li>Type 3: Prevent the model from looking ahead.</li>
+            <li class="ws"><code class="ws">
+The original transformer was made for translation, so this type of model makes sense. When predicting the 
+translated sentence, the model will predict words one at a time. 
+
+Say I had a sentence:“How are you”                  
+The model would translate the sentence to Spanish one word at a time:
+                            
+Prediction 1: Given “”, the model predicts the next word is “cómo”
+                            
+Prediction 2: Given “cómo”, the model predicts the next word is “estás”
+                            
+Prediction 3: Given “cómo estás” the model predicts the next word is “[END]” signifying the end of the sequence</code>
+    
+What if we wanted the model to learn quickly, so we feed the whole sentence “cómo estás [END] …” 
+and use a clever masking trick so the model cannot look ahead at future tokens, only past tokens. 
+This way it requires a single inference step to get an entire sentence translation from the model.
+</code>
+</li>
+                    </ol></td>
+            </tr>
+        </table>
+
+
+
+
+        <h3>2. Visualize the Calculation of Mask in Attention</h3>
+        <ol class="ws">
+            <li>With the words como estas [end] [pad] it has a resulting Matrices of...</li>
+            <li><img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*YazsJdqIwkcia_6-Xqf6OQ.png" alt="Visualization of Mask Calculation in Attention"></li>
+        </ol>
+        </ol>
+
+
+        <h3>3. New Networks</h3>
+    </main>
+</body>
