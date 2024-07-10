@@ -35,3 +35,9 @@ I need to highlight these **very important words**.
 ![alt text](image.jpg)
 
 <img src="image.jpg" width="60%" height="30%" style="display: block; margin: 0 auto"/>
+
+We're using markdown to pdf
+All you have to do is click on the file you wish to convert, then open command palette and type
+export
+
+use the option -export markdown to pdf

@@ -69,15 +69,15 @@ Miscellaneous X,Y,Z
 
 
 ### Lets trace
-Freq funcs
+**a.Freq funcs**
 ```
 utils.basic.reduce_masked_mean, [Simpleloss, centerLoss, offsetLoss]
 ```
-To scrap
+**b.To scrap**
 ```
 simplePool aka misc.py
 ```
-To DO later
+**c.To DO later**
 ```
 valid_bev_tgt??
 Trace that
@@ -113,3 +113,38 @@ ce_loss = SimpleLoss line56
 BCEWithLogitsLoss(seg_bev_pred, seg_bev_tgt)
 utils.basic.reduce_masked_mean(loss, valid_bev_tgt)
 ```
+
+New Datasets to be generated
+---
+- B = Batch
+- N_cams = Number of cameras
+- W = Width
+- H = Height
+
+|        Input        |   Shapes          | 
+|---------------------|-------------------|
+| rgb_cams            | B,N_cams,3,W,H    | 
+| Intrinsics_cams     | B,N_cams,4,4      |
+| Extrinsics_cams     | B,N_cams,??       |
+| vox_util_obj        | its a class obj   |
+| occupancy_aka_lidar |                   |
+
+| Inputs from loss         |   Shapes    | Dtype | Explanation|
+|--------------------------|-------------|-------|------------|
+| valid_bev_pred           | B,1,W,H     | Bool  | Initialize with zeros, set 1 where exists|
+
+
+| Outputs from Model       |   Shapes    | Dtype | Explanation |
+|--------------------------|-------------|-------|-------------|
+| feat_bev_pred            | B,n_ch,W,H  | F32   | Features from decoder|
+| seg_bev_pred             | B,1,W,H     | Int32 | Segmentation with Each class|
+| center_bev_pred          | B,1,W,H     | F32   | Center, of object with circle size of 3|
+| offset_bev_pred          | B,2,W,H     | F32   | Offset of object from center in x and y in pixel space|
+
+New Losses
+---
+1. ce_loss = SimpleLoss
+2. center_loss = balanced_mse_loss
+3. offset_loss = torch.abs(offset_pred,offset_tgt).sum(dim=1) -> maskmean(loss, segtgt*validtgt)
+
+- Change offset loss to use valid_bev_tgt, so it's univariate of each class loss
